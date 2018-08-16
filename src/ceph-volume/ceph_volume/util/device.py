@@ -2,6 +2,11 @@ import os
 from ceph_volume.api import lvm
 from ceph_volume.util import disk
 
+ALL_DEVICES = None
+
+if ALL_DEVICES is None:
+    ALL_DEVICES = disk.get_devices()
+
 
 class Device(object):
 
@@ -12,6 +17,7 @@ class Device(object):
         self.lv_api = None
         self.pvs_api = []
         self.disk_api = {}
+        self.sys_api = {}
         self._exists = None
         self._is_lvm_member = None
         self._parse()
@@ -29,6 +35,8 @@ class Device(object):
             # always check is this is an lvm member
             if device_type in ['part', 'disk']:
                 self._set_lvm_membership()
+
+        self.sys_api = ALL_DEVICES.get(self.abspath, {})
 
     def __repr__(self):
         prefix = 'Unknown'
