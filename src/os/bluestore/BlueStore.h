@@ -125,6 +125,8 @@ class BlueStore : public ObjectStore,
   // -----------------------------------------------------
   // types
 public:
+  void deferred_aggressive_incr() {deferred_aggressive++;}
+  void deferred_aggressive_decr() {deferred_aggressive--;}
   // config observer
   const char** get_tracked_conf_keys() const override;
   void handle_conf_change(const struct md_config_t *conf,

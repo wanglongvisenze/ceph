@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <iostream>
+#include <chrono>
+#include <thread>
 #include <time.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -121,6 +123,24 @@ BlueFS *open_bluefs(
     exit(EXIT_FAILURE);
   }
   return fs;
+}
+
+int bluestore_gifting_bluefs(CephContext* cct, string path)
+{
+  cct->_conf->bluefs_allocator = "bitmap";
+  cct->_conf->bluestore_allocator = "bitmap";
+  cct->_conf->bluestore_bluefs_min = 16 * 1024l * 1024 * 1024; // 16 GB
+  cct->_conf->bluestore_bluefs_balance_interval = 0.001; // 1 ms
+  BlueStore* store = new BlueStore(cct, path);
+  store->deferred_aggressive_incr(); // this will unlock those worker threads
+  store->mount(); // this will create a few worker threads to allocate spaces for bluefs
+  for (int i=0; i<3600; i++) {
+    std::chrono::seconds dt(1);
+    std::this_thread::sleep_for(dt);
+  }
+  store->umount();
+  store->deferred_aggressive_decr();
+  return 0;
 }
 
 int main(int argc, char **argv)
@@ -446,6 +466,8 @@ int main(int argc, char **argv)
     delete fs;
   }
   else if (action == "bluefs-bdev-expand") {
+    if (devs.size() == 1 && devs[0] == path + "/block")
+      return bluestore_gifting_bluefs(cct.get(), path);
     BlueFS *fs = open_bluefs(cct.get(), path, devs);
     cout << "start:" << std::endl;
     fs->dump_block_extents(cout);
