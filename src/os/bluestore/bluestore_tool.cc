@@ -437,10 +437,10 @@ int main(int argc, char **argv)
     // the following magic numbers are obtained from:
     // gdb /usr/bin/ceph-osd
     // b BlueStore::_reconcile_bluefs_freespace
-    // run -f --cluster ceph --id 4 --setuser ceph --setgroup ceph
+    // run -f --cluster ceph --id 2 --setuser ceph --setgroup ceph
     // then step forward and check the value of bset on this line:
     // https://github.com/ceph/ceph/blob/v12.2.7/src/os/bluestore/BlueStore.cc#L4829
-    uint64_t length = 1275400192, offset = 958815797248;
+    uint64_t length = 108335104, offset = 959982862336;
     fs->force_reclaim(id, length, offset);
     fs->dump_block_extents(cout);
     delete fs;
