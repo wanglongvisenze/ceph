@@ -433,6 +433,15 @@ int main(int argc, char **argv)
   }
   else if (action == "bluefs-bdev-sizes") {
     BlueFS *fs = open_bluefs(cct.get(), path, devs);
+    unsigned id = BlueFS::BDEV_DB;
+    // the following magic numbers are obtained from:
+    // gdb /usr/bin/ceph-osd
+    // b BlueStore::_reconcile_bluefs_freespace
+    // run -f --cluster ceph --id 4 --setuser ceph --setgroup ceph
+    // then step forward and check the value of bset on this line:
+    // https://github.com/ceph/ceph/blob/v12.2.7/src/os/bluestore/BlueStore.cc#L4829
+    uint64_t length = 1275400192, offset = 958815797248;
+    fs->force_reclaim(id, length, offset);
     fs->dump_block_extents(cout);
     delete fs;
   }

@@ -335,6 +335,17 @@ public:
 
   void collect_metadata(map<string,string> *pm);
   int fsck();
+  void force_reclaim(unsigned id, uint64_t length, int64_t offset) {
+    std::unique_lock<std::mutex> l(lock);
+    int r;
+    block_all[id].erase(offset, length);
+    block_total[id] -= length;
+    log_t.op_alloc_rm(id, offset, length);
+
+    flush_bdev();
+    r = _flush_and_sync_log(l);
+    assert(r == 0);
+  }
 
   uint64_t get_fs_usage();
   uint64_t get_total(unsigned id);
